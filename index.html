@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AIMA — Artificial Intelligence Mother Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --coral: #D85A30;
+  --coral-light: #FAECE7;
+  --coral-dark: #993C1D;
+  --ink: #1a1a18;
+  --ink-muted: #5F5E5A;
+  --ink-faint: #B4B2A9;
+  --surface: #FAFAF8;
+  --surface-2: #F1EFE8;
+  --border: rgba(26,26,24,0.1);
+  --border-strong: rgba(26,26,24,0.2);
+  --green: #3B6D11;
+  --green-light: #EAF3DE;
+  --blue: #185FA5;
+  --blue-light: #E6F1FB;
+  --amber: #854F0B;
+  --amber-light: #FAEEDA;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--surface);
+  color: var(--ink);
+  min-height: 100vh;
+}
+h1,h2,h3 { font-family: 'DM Serif Display', serif; font-weight: 400; }
+
+/* ── SCREENS ── */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ── WELCOME ── */
+#welcome {
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--surface);
+}
+.welcome-inner { width: 100%; max-width: 400px; }
+.logo-mark {
+  width: 56px; height: 56px;
+  background: var(--coral);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1.5rem;
+}
+.logo-mark svg { width: 28px; height: 28px; fill: white; }
+.welcome-title { font-size: 36px; color: var(--ink); margin-bottom: 6px; }
+.welcome-title span { color: var(--coral); }
+.welcome-sub { font-size: 14px; color: var(--ink-muted); margin-bottom: 2.5rem; line-height: 1.6; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.form-group input {
+  width: 100%; padding: 12px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; color: var(--ink);
+  background: white; outline: none;
+  transition: border-color 0.15s;
+}
+.form-group input:focus { border-color: var(--coral); }
+.btn-primary {
+  width: 100%; padding: 13px;
+  background: var(--coral); color: white;
+  border: none; border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 500;
+  cursor: pointer; transition: background 0.15s;
+  margin-top: 4px;
+}
+.btn-primary:hover { background: var(--coral-dark); }
+.divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
+.divider::before, .divider::after { content:''; flex:1; height:1px; background: var(--border); }
+.divider span { font-size: 12px; color: var(--ink-faint); }
+.btn-secondary {
+  width: 100%; padding: 12px;
+  background: white; color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-secondary:hover { background: var(--surface-2); }
+.join-section { display: none; margin-top: 12px; }
+.join-section.open { display: block; }
+.error-msg { font-size: 13px; color: #A32D2D; margin-top: 8px; text-align: center; min-height: 18px; }
+
+/* ── APP SHELL ── */
+#app { flex-direction: column; }
+.topbar {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 56px; position: sticky; top: 0; z-index: 10;
+}
+.topbar-logo { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--ink); }
+.topbar-logo span { color: var(--coral); }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.user-chip {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13px; color: var(--ink-muted);
+}
+.avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600; color: white;
+  flex-shrink: 0;
+}
+.btn-icon {
+  background: none; border: 1px solid var(--border-strong);
+  border-radius: 8px; padding: 5px 10px;
+  font-size: 12px; color: var(--ink-muted);
+  cursor: pointer; transition: background 0.12s;
+}
+.btn-icon:hover { background: var(--surface-2); }
+
+.nav {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex; padding: 0 1.5rem;
+  overflow-x: auto;
+}
+.nav-tab {
+  padding: 12px 16px; font-size: 13px; font-weight: 500;
+  color: var(--ink-muted); border: none; background: none;
+  cursor: pointer; border-bottom: 2px solid transparent;
+  white-space: nowrap; transition: color 0.12s;
+}
+.nav-tab.active { color: var(--coral); border-bottom-color: var(--coral); }
+
+.content { flex: 1; padding: 1.5rem; max-width: 800px; margin: 0 auto; width: 100%; }
+
+/* ── TASKS ── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.section-title { font-size: 20px; color: var(--ink); }
+.btn-add {
+  background: var(--coral); color: white;
+  border: none; border-radius: var(--radius-sm);
+  padding: 7px 14px; font-size: 13px; font-weight: 500;
+  cursor: pointer; display: flex; align-items: center; gap: 5px;
+}
+.btn-add:hover { background: var(--coral-dark); }
+
+.add-form {
+  background: white; border: 1px solid var(--border-strong);
+  border-radius: var(--radius); padding: 1rem;
+  margin-bottom: 1rem; display: none;
+  animation: slideDown 0.15s ease;
+}
+.add-form.open { display: block; }
+@keyframes slideDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+
+.form-inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+.form-inline input, .form-inline select {
+  padding: 9px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: var(--ink); background: var(--surface);
+  outline: none;
+}
+.form-inline input:focus, .form-inline select:focus { border-color: var(--coral); }
+.fi-name { flex: 1; min-width: 160px; }
+.fi-date { width: 140px; }
+.fi-who { width: 130px; }
+.fi-type { width: 120px; }
+.btn-save {
+  background: var(--coral); color: white;
+  border: none; border-radius: var(--radius-sm);
+  padding: 9px 16px; font-size: 13px; font-weight: 500;
+  cursor: pointer; white-space: nowrap;
+}
+.btn-cancel-form {
+  background: none; border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm); padding: 9px 12px;
+  font-size: 13px; color: var(--ink-muted); cursor: pointer;
+}
+
+.task-card {
+  background: white; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 14px;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+  transition: border-color 0.12s;
+}
+.task-card:hover { border-color: var(--border-strong); }
+.task-card.done { opacity: 0.55; }
+.task-body { flex: 1; min-width: 0; }
+.task-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.task-name {
+  font-size: 14px; font-weight: 500; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 280px;
+}
+.task-name.done { text-decoration: line-through; color: var(--ink-muted); }
+.badge {
+  font-size: 11px; font-weight: 500; padding: 2px 8px;
+  border-radius: 20px; white-space: nowrap;
+}
+.badge-pending { background: var(--amber-light); color: var(--amber); }
+.badge-inprogress { background: var(--blue-light); color: var(--blue); }
+.badge-done { background: var(--green-light); color: var(--green); }
+.badge-generic { background: var(--coral-light); color: var(--coral-dark); }
+.task-meta { font-size: 12px; color: var(--ink-faint); margin-top: 3px; }
+.task-actions { display: flex; gap: 5px; flex-shrink: 0; }
+.task-btn {
+  background: none; border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 9px;
+  font-size: 11px; color: var(--ink-muted); cursor: pointer;
+  transition: all 0.1s; white-space: nowrap;
+}
+.task-btn:hover { background: var(--surface-2); border-color: var(--border-strong); }
+.task-btn.danger:hover { background: #FCEBEB; color: #A32D2D; border-color: #F09595; }
+.task-btn.grab { background: var(--blue-light); color: var(--blue); border-color: #B5D4F4; }
+
+.empty-state {
+  text-align: center; padding: 3rem 1rem;
+  color: var(--ink-faint); font-size: 14px;
+}
+.empty-state .emo { font-size: 32px; margin-bottom: 8px; }
+
+/* ── FILTER BAR ── */
+.filter-bar { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+.filter-chip {
+  padding: 5px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 500;
+  border: 1px solid var(--border-strong);
+  background: white; color: var(--ink-muted);
+  cursor: pointer; transition: all 0.1s;
+}
+.filter-chip.active { background: var(--coral); color: white; border-color: var(--coral); }
+
+/* ── SHOPPING ── */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px; margin-bottom: 1rem;
+}
+.day-card {
+  background: white; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px;
+}
+.day-header {
+  font-size: 12px; font-weight: 600; color: var(--coral);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
+}
+.shop-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+.shop-item:last-child { border-bottom: none; }
+.shop-check {
+  width: 16px; height: 16px; border-radius: 4px;
+  border: 1.5px solid var(--border-strong);
+  cursor: pointer; flex-shrink: 0;
+  appearance: none; -webkit-appearance: none;
+  background: white; position: relative;
+}
+.shop-check:checked { background: var(--coral); border-color: var(--coral); }
+.shop-check:checked::after {
+  content: '✓'; position: absolute; color: white;
+  font-size: 10px; top: -1px; left: 1px;
+}
+.shop-item-name { flex: 1; }
+.shop-item-name.checked { text-decoration: line-through; color: var(--ink-faint); }
+.shop-del { background: none; border: none; color: var(--ink-faint); cursor: pointer; font-size: 14px; padding: 0 2px; }
+.shop-del:hover { color: #A32D2D; }
+.add-shop-form { display: flex; gap: 8px; margin-top: 8px; }
+.add-shop-form input {
+  flex: 1; padding: 7px 10px;
+  border: 1px solid var(--border); border-radius: 6px;
+  font-size: 13px; font-family: 'DM Sans', sans-serif;
+  background: var(--surface); outline: none;
+}
+.add-shop-form input:focus { border-color: var(--coral); }
+.add-shop-btn {
+  background: var(--coral); color: white; border: none;
+  border-radius: 6px; padding: 7px 12px; font-size: 14px; cursor: pointer;
+}
+
+/* ── FAMILY ── */
+.family-card {
+  background: white; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.family-card h3 { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+.member-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+}
+.member-row:last-child { border-bottom: none; }
+.member-name { flex: 1; font-size: 14px; font-weight: 500; }
+.member-you { font-size: 11px; color: var(--coral); font-weight: 500; }
+.code-display {
+  background: var(--surface-2); border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm); padding: 1rem; text-align: center; margin: 12px 0;
+}
+.code-value { font-size: 30px; font-weight: 600; letter-spacing: 6px; color: var(--ink); font-family: 'DM Sans', sans-serif; }
+.code-label { font-size: 12px; color: var(--ink-muted); margin-bottom: 8px; }
+.share-wa {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #25D366; color: white; border: none;
+  border-radius: var(--radius-sm); padding: 9px 18px;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  text-decoration: none; margin-top: 8px;
+}
+.share-wa:hover { background: #1da851; }
+
+/* ── AIMA AI ── */
+.aima-bubble {
+  background: white; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem;
+  margin-bottom: 10px; display: flex; gap: 10px;
+}
+.aima-icon {
+  width: 32px; height: 32px; background: var(--coral);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 16px;
+}
+.aima-text { font-size: 14px; line-height: 1.6; color: var(--ink); flex: 1; }
+.aima-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.aima-btn {
+  background: var(--coral-light); color: var(--coral-dark);
+  border: 1px solid #F5C4B3; border-radius: 6px;
+  padding: 5px 12px; font-size: 12px; font-weight: 500; cursor: pointer;
+}
+.aima-btn:hover { background: #F5C4B3; }
+.aima-btn.accept { background: var(--green-light); color: var(--green); border-color: #C0DD97; }
+.aima-btn.accept:hover { background: #C0DD97; }
+.aima-loading { color: var(--ink-faint); font-size: 13px; padding: 8px 0; }
+
+/* ── COLORS for avatars ── */
+.c0{background:#D85A30} .c1{background:#185FA5} .c2{background:#3B6D11}
+.c3{background:#854F0B} .c4{background:#993556} .c5{background:#0F6E56}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: white; border-radius: var(--radius-sm);
+  padding: 10px 20px; font-size: 13px; z-index: 100;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- WELCOME -->
+<div id="welcome" class="screen active">
+  <div class="welcome-inner">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+    </div>
+    <h1 class="welcome-title">AI<span>MA</span></h1>
+    <p class="welcome-sub">Tu agente de hogar inteligente. Organiza, gestiona y mantén a tu familia sincronizada.</p>
+
+    <div class="form-group">
+      <label>Tu nombre</label>
+      <input id="input-name" type="text" placeholder="Ej: María" autocomplete="off"/>
+    </div>
+    <button class="btn-primary" onclick="createFamily()">Crear familia</button>
+    <div class="error-msg" id="welcome-error"></div>
+
+    <div class="divider"><span>o</span></div>
+
+    <button class="btn-secondary" onclick="toggleJoin()">Unirme a una familia existente</button>
+
+    <div class="join-section" id="join-section">
+      <div class="form-group" style="margin-top:12px">
+        <label>Código de familia</label>
+        <input id="input-code" type="text" placeholder="Ej: ABC123" maxlength="6" style="text-transform:uppercase;letter-spacing:3px;font-weight:600"/>
+      </div>
+      <button class="btn-primary" onclick="joinFamily()">Unirme</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">AI<span>MA</span></div>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="avatar c0" id="topbar-avatar"></div>
+        <span id="topbar-name"></span>
+      </div>
+      <button class="btn-icon" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-tab active" onclick="switchTab('tasks',this)">Tareas</button>
+    <button class="nav-tab" onclick="switchTab('shopping',this)">Lista de la compra</button>
+    <button class="nav-tab" onclick="switchTab('aima',this)">AIMA ✦</button>
+    <button class="nav-tab" onclick="switchTab('family',this)">Familia</button>
+  </nav>
+
+  <div class="content">
+
+    <!-- TASKS TAB -->
+    <div id="tab-tasks" class="tab-pane active">
+      <div class="section-header">
+        <h2 class="section-title">Tareas</h2>
+        <button class="btn-add" onclick="toggleAddTask()">+ Nueva tarea</button>
+      </div>
+
+      <div id="add-task-form" class="add-form">
+        <div class="form-inline">
+          <input class="fi-name" id="task-name-input" type="text" placeholder="Descripción de la tarea"/>
+          <input class="fi-date" id="task-date-input" type="date"/>
+          <select class="fi-who" id="task-who-input">
+            <option value="">Sin asignar</option>
+          </select>
+          <select class="fi-type" id="task-type-input">
+            <option value="assigned">Asignada</option>
+            <option value="generic">Genérica</option>
+          </select>
+          <button class="btn-save" onclick="saveTask()">Guardar</button>
+          <button class="btn-cancel-form" onclick="toggleAddTask()">Cancelar</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-chip active" onclick="setFilter('all',this)">Todas</button>
+        <button class="filter-chip" onclick="setFilter('pending',this)">Pendientes</button>
+        <button class="filter-chip" onclick="setFilter('inprogress',this)">En curso</button>
+        <button class="filter-chip" onclick="setFilter('done',this)">Completadas</button>
+        <button class="filter-chip" onclick="setFilter('generic',this)">Genéricas</button>
+      </div>
+
+      <div id="task-list"></div>
+    </div>
+
+    <!-- SHOPPING TAB -->
+    <div id="tab-shopping" class="tab-pane" style="display:none">
+      <div class="section-header">
+        <h2 class="section-title">Lista de la compra</h2>
+      </div>
+      <div class="week-grid" id="week-grid"></div>
+    </div>
+
+    <!-- AIMA TAB -->
+    <div id="tab-aima" class="tab-pane" style="display:none">
+      <div class="section-header">
+        <h2 class="section-title">AIMA ✦</h2>
+      </div>
+      <div id="aima-feed">
+        <div class="aima-bubble">
+          <div class="aima-icon">✦</div>
+          <div class="aima-text">
+            Hola, soy AIMA. Analizo las tareas de tu familia y te ayudo a organizarte mejor. Pulsa el botón para que analice la semana actual.
+            <div class="aima-actions">
+              <button class="aima-btn accept" onclick="aimaAnalyze()">Analizar semana</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAMILY TAB -->
+    <div id="tab-family" class="tab-pane" style="display:none">
+      <div class="section-header">
+        <h2 class="section-title">Tu familia</h2>
+      </div>
+      <div class="family-card">
+        <h3>Código de acceso</h3>
+        <div class="code-display">
+          <div class="code-label">Comparte este código para que otros se unan</div>
+          <div class="code-value" id="family-code-display">——</div>
+        </div>
+        <div style="text-align:center">
+          <a id="share-wa-btn" class="share-wa" href="#" target="_blank">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.118.554 4.103 1.524 5.823L0 24l6.344-1.5C8.013 23.456 9.967 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.946 0-3.77-.535-5.328-1.464l-.382-.225-3.766.89.938-3.645-.248-.397C2.53 15.671 2 13.895 2 12 2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+            Compartir por WhatsApp
+          </a>
+        </div>
+      </div>
+      <div class="family-card">
+        <h3>Miembros</h3>
+        <div id="member-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, push, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAHydBbdBTq0FaXr73DWpDk1NzePPxXzQU",
+  authDomain: "juankilocker.firebaseapp.com",
+  databaseURL: "https://juankilocker-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "juankilocker",
+  storageBucket: "juankilocker.firebasestorage.app",
+  messagingSenderId: "1067982620130",
+  appId: "1:1067982620130:web:3d56cf9a58fa25f842e5bb"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+
+// ── STATE ──
+let state = { user: null, familyCode: null, members: {}, tasks: {}, shopping: {} };
+let taskFilter = 'all';
+
+// ── HELPERS ──
+function genCode() {
+  return Math.random().toString(36).substring(2,8).toUpperCase();
+}
+function colorIdx(name) {
+  let h = 0; for (let c of name) h = (h * 31 + c.charCodeAt(0)) % 6;
+  return h;
+}
+function initials(name) {
+  return name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+function getWeekDays() {
+  const days = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  const today = new Date();
+  const mon = new Date(today);
+  mon.setDate(today.getDate() - ((today.getDay()+6)%7));
+  return days.map((d,i)=>{
+    const dt = new Date(mon); dt.setDate(mon.getDate()+i);
+    return { label: d, key: dt.toISOString().split('T')[0] };
+  });
+}
+
+// ── AUTH FLOW ──
+window.createFamily = async function() {
+  const name = document.getElementById('input-name').value.trim();
+  if (!name) { showError('Escribe tu nombre'); return; }
+  const code = genCode();
+  const userId = 'u_' + Date.now();
+  await set(ref(db, `families/${code}/members/${userId}`), { name, joinedAt: Date.now() });
+  localStorage.setItem('aima_user', JSON.stringify({ userId, name, familyCode: code }));
+  enterApp(userId, name, code);
+};
+
+window.joinFamily = async function() {
+  const name = document.getElementById('input-name').value.trim();
+  const code = document.getElementById('input-code').value.trim().toUpperCase();
+  if (!name) { showError('Escribe tu nombre'); return; }
+  if (code.length < 4) { showError('Código inválido'); return; }
+  const snap = await get(ref(db, `families/${code}`));
+  if (!snap.exists()) { showError('Familia no encontrada'); return; }
+  const userId = 'u_' + Date.now();
+  await set(ref(db, `families/${code}/members/${userId}`), { name, joinedAt: Date.now() });
+  localStorage.setItem('aima_user', JSON.stringify({ userId, name, familyCode: code }));
+  enterApp(userId, name, code);
+};
+
+window.logout = function() {
+  localStorage.removeItem('aima_user');
+  location.reload();
+};
+
+window.toggleJoin = function() {
+  document.getElementById('join-section').classList.toggle('open');
+  const url = new URL(location.href);
+  const code = url.searchParams.get('code');
+  if (code) document.getElementById('input-code').value = code;
+};
+
+function showError(msg) {
+  document.getElementById('welcome-error').textContent = msg;
+  setTimeout(()=>document.getElementById('welcome-error').textContent='',3000);
+}
+
+function enterApp(userId, name, code) {
+  state.user = { userId, name };
+  state.familyCode = code;
+  document.getElementById('welcome').classList.remove('active');
+  document.getElementById('app').classList.add('active');
+  document.getElementById('topbar-name').textContent = name;
+  const av = document.getElementById('topbar-avatar');
+  av.textContent = initials(name);
+  av.className = `avatar c${colorIdx(name)}`;
+  document.getElementById('family-code-display').textContent = code;
+  const waUrl = `https://wa.me/?text=Únete a nuestra familia en AIMA con el código *${code}* 👉 https://logistips01-rgb.github.io/AIMA?code=${code}`;
+  document.getElementById('share-wa-btn').href = `https://wa.me/?text=${encodeURIComponent('Únete a nuestra familia en AIMA con el código ' + code + ' 👉 https://logistips01-rgb.github.io/AIMA?code=' + code)}`;
+  subscribeData();
+}
+
+function subscribeData() {
+  const fc = state.familyCode;
+  // Members
+  onValue(ref(db, `families/${fc}/members`), snap => {
+    state.members = snap.val() || {};
+    renderMembers();
+    populateMemberSelect();
+  });
+  // Tasks
+  onValue(ref(db, `families/${fc}/tasks`), snap => {
+    state.tasks = snap.val() || {};
+    renderTasks();
+  });
+  // Shopping
+  onValue(ref(db, `families/${fc}/shopping`), snap => {
+    state.shopping = snap.val() || {};
+    renderShopping();
+  });
+}
+
+// ── TABS ──
+window.switchTab = function(tab, el) {
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tab-pane').forEach(p=>p.style.display='none');
+  document.getElementById('tab-'+tab).style.display='block';
+};
+
+// ── TASKS ──
+window.toggleAddTask = function() {
+  document.getElementById('add-task-form').classList.toggle('open');
+};
+
+window.setFilter = function(f, el) {
+  taskFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderTasks();
+};
+
+window.saveTask = async function() {
+  const name = document.getElementById('task-name-input').value.trim();
+  if (!name) { showToast('Escribe el nombre de la tarea'); return; }
+  const date = document.getElementById('task-date-input').value;
+  const who = document.getElementById('task-who-input').value;
+  const type = document.getElementById('task-type-input').value;
+  const task = {
+    name, date: date||'', assignedTo: who, type,
+    status: 'pending', createdBy: state.user.userId,
+    createdAt: Date.now()
+  };
+  await push(ref(db, `families/${state.familyCode}/tasks`), task);
+  document.getElementById('task-name-input').value='';
+  document.getElementById('task-date-input').value='';
+  document.getElementById('add-task-form').classList.remove('open');
+  showToast('Tarea añadida');
+};
+
+window.updateTaskStatus = async function(id, status) {
+  await update(ref(db, `families/${state.familyCode}/tasks/${id}`), { status });
+};
+
+window.grabTask = async function(id) {
+  await update(ref(db, `families/${state.familyCode}/tasks/${id}`), {
+    assignedTo: state.user.userId, status: 'inprogress'
+  });
+  showToast('Tarea cogida');
+};
+
+window.deleteTask = async function(id) {
+  if (!confirm('¿Eliminar esta tarea?')) return;
+  await remove(ref(db, `families/${state.familyCode}/tasks/${id}`));
+};
+
+function renderTasks() {
+  const list = document.getElementById('task-list');
+  const tasks = state.tasks;
+  let items = Object.entries(tasks);
+  if (taskFilter === 'generic') items = items.filter(([,t])=>t.type==='generic');
+  else if (taskFilter !== 'all') items = items.filter(([,t])=>t.status===taskFilter);
+  items.sort((a,b)=>(a[1].createdAt||0)-(b[1].createdAt||0));
+  if (!items.length) {
+    list.innerHTML = `<div class="empty-state"><div class="emo">📋</div>No hay tareas aquí</div>`;
+    return;
+  }
+  list.innerHTML = items.map(([id,t])=>{
+    const memberName = t.assignedTo && state.members[t.assignedTo] ? state.members[t.assignedTo].name : '';
+    const dateStr = t.date ? `· ${t.date}` : '';
+    const isMe = t.assignedTo === state.user.userId;
+    const isGeneric = t.type === 'generic';
+    let badge = '';
+    if (isGeneric && t.status==='pending') badge = `<span class="badge badge-generic">Genérica</span>`;
+    else if (t.status==='pending') badge = `<span class="badge badge-pending">Pendiente</span>`;
+    else if (t.status==='inprogress') badge = `<span class="badge badge-inprogress">En curso</span>`;
+    else badge = `<span class="badge badge-done">Completada</span>`;
+    let actions = '';
+    if (isGeneric && t.status==='pending') {
+      actions += `<button class="task-btn grab" onclick="grabTask('${id}')">Coger</button>`;
+    }
+    if (t.status==='pending' && !isGeneric) {
+      actions += `<button class="task-btn" onclick="updateTaskStatus('${id}','inprogress')">Iniciar</button>`;
+    }
+    if (t.status==='inprogress') {
+      actions += `<button class="task-btn" onclick="updateTaskStatus('${id}','done')">Completar</button>`;
+    }
+    if (t.status==='done') {
+      actions += `<button class="task-btn" onclick="updateTaskStatus('${id}','pending')">Reabrir</button>`;
+    }
+    actions += `<button class="task-btn danger" onclick="deleteTask('${id}')">✕</button>`;
+    const isDone = t.status==='done';
+    return `<div class="task-card ${isDone?'done':''}">
+      <div class="task-body">
+        <div class="task-name-row">
+          <span class="task-name ${isDone?'done':''}">${t.name}</span>
+          ${badge}
+        </div>
+        <div class="task-meta">${memberName ? `${memberName} ` : ''}${dateStr}</div>
+      </div>
+      <div class="task-actions">${actions}</div>
+    </div>`;
+  }).join('');
+}
+
+function populateMemberSelect() {
+  const sel = document.getElementById('task-who-input');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Sin asignar</option>' +
+    Object.entries(state.members).map(([id,m])=>`<option value="${id}">${m.name}</option>`).join('');
+  if (cur) sel.value = cur;
+}
+
+// ── SHOPPING ──
+function renderShopping() {
+  const grid = document.getElementById('week-grid');
+  const days = getWeekDays();
+  grid.innerHTML = days.map(d=>{
+    const items = Object.entries(state.shopping).filter(([,i])=>i.day===d.key);
+    const rows = items.map(([id,i])=>`
+      <div class="shop-item">
+        <input type="checkbox" class="shop-check" ${i.checked?'checked':''} onchange="toggleShopItem('${id}',this.checked)"/>
+        <span class="shop-item-name ${i.checked?'checked':''}">${i.name}</span>
+        <button class="shop-del" onclick="delShopItem('${id}')">×</button>
+      </div>`).join('');
+    return `<div class="day-card">
+      <div class="day-header">${d.label}</div>
+      ${rows||'<div style="font-size:12px;color:var(--ink-faint);padding:4px 0">Vacío</div>'}
+      <div class="add-shop-form">
+        <input type="text" placeholder="Añadir..." id="shop-input-${d.key}" onkeydown="if(event.key==='Enter')addShopItem('${d.key}')"/>
+        <button class="add-shop-btn" onclick="addShopItem('${d.key}')">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.addShopItem = async function(day) {
+  const inp = document.getElementById(`shop-input-${day}`);
+  const name = inp.value.trim();
+  if (!name) return;
+  await push(ref(db, `families/${state.familyCode}/shopping`), { name, day, checked: false, addedBy: state.user.userId });
+  inp.value = '';
+};
+
+window.toggleShopItem = async function(id, checked) {
+  await update(ref(db, `families/${state.familyCode}/shopping/${id}`), { checked });
+};
+
+window.delShopItem = async function(id) {
+  await remove(ref(db, `families/${state.familyCode}/shopping/${id}`));
+};
+
+// ── MEMBERS ──
+function renderMembers() {
+  const list = document.getElementById('member-list');
+  list.innerHTML = Object.entries(state.members).map(([id,m],i)=>`
+    <div class="member-row">
+      <div class="avatar c${colorIdx(m.name)}">${initials(m.name)}</div>
+      <span class="member-name">${m.name}</span>
+      ${id===state.user.userId?'<span class="member-you">Tú</span>':''}
+    </div>`).join('');
+}
+
+// ── AIMA AI ──
+window.aimaAnalyze = async function() {
+  const feed = document.getElementById('aima-feed');
+  const tasks = Object.values(state.tasks);
+  const members = Object.values(state.members).map(m=>m.name).join(', ');
+  const pending = tasks.filter(t=>t.status==='pending').length;
+  const inprog = tasks.filter(t=>t.status==='inprogress').length;
+  const done = tasks.filter(t=>t.status==='done').length;
+  const taskSummary = tasks.map(t=>`- ${t.name} (${t.status}${t.date?' · '+t.date:''})`).join('\n') || 'Sin tareas';
+
+  const loading = document.createElement('div');
+  loading.className='aima-loading'; loading.textContent='AIMA está analizando...';
+  feed.appendChild(loading);
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`Eres AIMA, una asistente doméstica inteligente y cercana para una familia española. Eres cálida, práctica y proactiva. Hablas en español con tono natural. Analiza las tareas del hogar y sugiere mejoras concretas. Responde siempre en JSON con este formato exacto: {"analysis":"texto del análisis (máx 3 frases)","suggestions":["sugerencia 1","sugerencia 2","sugerencia 3"],"warning":"aviso urgente si lo hay o null"}`,
+        messages:[{role:'user',content:`Miembros: ${members}\nTareas pendientes: ${pending}, en curso: ${inprog}, completadas: ${done}\n\nDetalle:\n${taskSummary}\n\nAnaliza y sugiere tareas importantes que podrían faltar.`}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content[0].text;
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = { analysis: text, suggestions: [], warning: null }; }
+    loading.remove();
+    const bubble = document.createElement('div');
+    bubble.className='aima-bubble';
+    bubble.innerHTML=`<div class="aima-icon">✦</div><div class="aima-text">
+      <strong>Análisis de la semana</strong><br/>${parsed.analysis}
+      ${parsed.warning?`<br/><br/>⚠️ <strong>${parsed.warning}</strong>`:''}
+      ${parsed.suggestions?.length?`<br/><br/><strong>Tareas sugeridas:</strong><br/>${parsed.suggestions.map(s=>`• ${s}`).join('<br/>')}
+      <div class="aima-actions">
+        ${parsed.suggestions.map((s,i)=>`<button class="aima-btn accept" onclick="acceptSuggestion('${encodeURIComponent(s)}')">+ ${s.substring(0,30)}${s.length>30?'…':''}</button>`).join('')}
+      </div>`:''}
+    </div>`;
+    feed.appendChild(bubble);
+  } catch(e) {
+    loading.textContent='Error al conectar con AIMA. Inténtalo de nuevo.';
+  }
+};
+
+window.acceptSuggestion = async function(encodedName) {
+  const name = decodeURIComponent(encodedName);
+  await push(ref(db, `families/${state.familyCode}/tasks`), {
+    name, date:'', assignedTo:'', type:'generic',
+    status:'pending', createdBy:'aima', createdAt: Date.now()
+  });
+  showToast('Tarea añadida desde AIMA');
+};
+
+// ── INIT ──
+const saved = localStorage.getItem('aima_user');
+if (saved) {
+  const { userId, name, familyCode } = JSON.parse(saved);
+  enterApp(userId, name, familyCode);
+} else {
+  const url = new URL(location.href);
+  const code = url.searchParams.get('code');
+  if (code) {
+    document.getElementById('input-code').value = code;
+    toggleJoin();
+  }
+}
+</script>
+</body>
+</html>
